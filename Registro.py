@@ -8,8 +8,8 @@ import tkinter as tk
 from pydub import AudioSegment
 import sutil
 from mutagen.mp3 import MP3
-import EagleDefender
-from utils import user1,user2
+import Juego
+
 from PIL import Image, ImageTk
 import pygame
 
@@ -52,8 +52,8 @@ def guardar_cancion(ruta_archivo, destino):
 def mostrar_error(users):
     if users == 2:
         window.destroy()
-        EagleDefender.ventana_principal()
-        print(user1, user2)
+        Juego.ventana_principal()
+
     else:
         pass
     
@@ -72,8 +72,7 @@ def login():
             login_window.destroy()  # Destroy the login_window when done
             users +=1
             mostrar_error(users)
-            usuarios(user1, user2, e1.get)
-            print(user1)
+
         else:
             l3.config(text="Usuario no encontrado")
 
@@ -116,7 +115,7 @@ def signup():
         mostrar_error(users)
         users +=1
         mostrar_error(users) 
-        usuarios(user1, user2, e2.get)
+
         
 
     signup_window = Tk()
