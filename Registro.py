@@ -7,27 +7,41 @@ users = 0
 import tkinter as tk
 from pydub import AudioSegment
 import sutil
+
 from mutagen.mp3 import MP3
+from mutagen.mp3 import MPEGInfo
+from mutagen import File
+import os
+
 import Juego
 
 from PIL import Image, ImageTk
 import pygame
 
+from Utils import user1 , user2 
+
 MAX_DURACION = 5 * 60  # Duración máxima en segundos (5 minutos)
+def ppp():
+    Juego.ventana_principal()
 
-def usuarios(user1, user2,name):
-
-    if user1 == "" :
-        user1 = name
+def asignar_user (userName):
+    global user1
+    global user2
+    if user1 == "":
+        user1=userName
     else:
-        user2 = name
+        user2=userName
         
 def cargar_cancion():
     ruta_archivo = filedialog.askopenfilename()
     if ruta_archivo:
         duracion = obtener_duracion_mp3(ruta_archivo)
-        if duracion is not None and duracion <= MAX_DURACION:
-            guardar_cancion(ruta_archivo, 'Canciones')
+        if duracion is not None :
+            if duracion <= MAX_DURACION:
+                guardar_cancion(ruta_archivo, 'Canciones')
+            else:
+                cortada = cortar_cancion(ruta_archivo)
+                guardar_cancion(cortada, 'Canciones')
         elif duracion is not None:
             messagebox.showerror("ERROR", "La canción debe de durar menos de cinco minutos")
 
@@ -40,6 +54,25 @@ def obtener_duracion_mp3(ruta_archivo):
         print(f"Error al obtener la duración de la canción: {str(e)}")
         return None
 
+def cortar_cancion(input_file):
+    # Abre el archivo de entrada MP3
+    audio = MP3(input_file)
+
+    # Obtiene la duración en segundos de la canción
+    original_duration = audio.info.length
+
+    # Define la duración objetivo en segundos (3 minutos y 30 segundos)
+    target_duration = 3 * 60 + 30
+
+    # Comprueba si la canción necesita ser cortada
+    if original_duration > target_duration:
+        # Obtén la ruta completa del archivo de salida
+        output_file = os.path.join(os.path.dirname(input_file), "cancion_cortada.mp3")
+        os.system(f'ffmpeg -i "{input_file}" -t {target_duration} -acodec copy "{output_file}"')
+        return output_file
+    else:
+        return input_file
+    
 def guardar_cancion(ruta_archivo, destino):
     try:
         # Copiar el archivo original a la ubicación de destino
@@ -51,6 +84,8 @@ def guardar_cancion(ruta_archivo, destino):
         
 def mostrar_error(users):
     if users == 2:
+        print (user1)
+        print (user2)
         window.destroy()
         Juego.ventana_principal()
 
@@ -58,11 +93,16 @@ def mostrar_error(users):
         pass
     
 def login():
+    global user1
+    fonde = Image.open("Imágenes/5122533.png") 
+    imagen = ImageTk.PhotoImage(fonde)
     def login_database():
-        global users        
+        global users
+        global user1        
         conn = sqlite3.connect("2.db")
         cur = conn.cursor()
         cur.execute("SELECT * FROM test WHERE email=? AND password=?", (e1.get(), e2.get()))
+        asignar_user(e1.get())
         row = cur.fetchall()
         conn.close()
         print(row)
@@ -77,11 +117,13 @@ def login():
             l3.config(text="Usuario no encontrado")
 
     login_window = Tk()
-    login_window.geometry("600x600")
-   
+    login_window.geometry("500x200")
+    login_window.resizable(False, False) #Se establece que la ventana no se puede agrandar
     
     
+
    
+
     l1 = Label(login_window, text="Email", font="times 20")
     l1.grid(row=1, column=1)
     l2 = Label(login_window, text="Contraseña", font="times 20")
@@ -108,6 +150,7 @@ def signup():
         cur = conn.cursor()
         cur.execute("CREATE TABLE IF NOT EXISTS test(id INTEGER PRIMARY KEY, name text, email text, password text, birth text)")
         cur.execute("INSERT INTO test VALUES(NULL,?,?,?,?)", (e1.get(), e2.get(), e3.get(), e4.get()))
+        asignar_user(e1.get())
         l4 = Label(signup_window, text="Cuenta creada", font="times 15")
         l4.grid(row=6, column=2)
         conn.commit()
@@ -120,6 +163,8 @@ def signup():
 
     signup_window = Tk()
     signup_window.geometry("400x250")
+    
+    
     l1 = Label(signup_window, text="Nombre de usuario", font="times 20")
     l1.grid(row=1, column=1)
     l2 = Label(signup_window, text="Email", font="times 20")
@@ -144,7 +189,7 @@ def signup():
 
     b1 = Button(signup_window, text="Registrarse", width=20, command=signup_database)
     b1.grid(row=5, column=2)
-
+ 
     signup_window.mainloop()
     
 def exitt():
