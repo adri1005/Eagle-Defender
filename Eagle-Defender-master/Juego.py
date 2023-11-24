@@ -1,5 +1,6 @@
 import json
 from tkinter import *
+import threading
 from tkinter import simpledialog
 from tkinter import messagebox, Scrollbar, Listbox, Button, Toplevel
 import sqlite3
@@ -75,6 +76,15 @@ def ventana_ingreso_valores():
 
 # Llamada a la función para iniciar el programa
 ventana_ingreso_valores()
+# En el módulo Juego
+user1 = ""
+user2 = ""
+
+def actualizar_usuarios(u1, u2):
+    global user1, user2
+    user1 = u1
+    user2 = u2
+
 def ventana_principal():
 
     global CancionAtacante
@@ -461,6 +471,21 @@ def obtener_duracion_mp3(ruta_archivo):
         print(f"Error al obtener la duración de la canción: {str(e)}")
         return None
 
+
+
+
+
+
+def pausar_juego(estado, menu_window=None):
+    global paused, menu_visible, continuar_juego
+    paused = estado
+    if menu_visible and menu_window:
+        menu_window.withdraw()
+        menu_visible = False
+    continuar_juego = not estado
+
+
+
 def stfu ():
     global valores_ingresados
     # Inicializar Pygame
@@ -471,7 +496,10 @@ def stfu ():
     # Colores
     WHITE = (255, 255, 255)
     RED = (255, 0, 0)
-    
+    BLUE = (0, 0, 255)
+
+    explosion_sound = pygame.mixer.Sound("Imágenes/ExplosionAD.mp3")
+
     # Carga de imágenes
     tanque = pygame.image.load("Imágenes/Tanque_EagleF.png")
     woodenblock = pygame.image.load("Imágenes/woodenblock.png")
@@ -482,7 +510,7 @@ def stfu ():
     bombullet = pygame.image.load("Imágenes/bomb.png")
     explosion_image = pygame.image.load("Imágenes/exp.png")
     background_image = pygame.image.load("Imágenes/fondo_part.png")
-    shot_image = pygame.image.load("Imágenes/exp1.png")
+
     # Dimensiones de la ventana
     width, height = 800, 600
     window = pygame.display.set_mode((width, height))
@@ -526,7 +554,7 @@ def stfu ():
     moving_down = False
     moving_left = False
     moving_right = False
-    uwu= False
+
     
     # Velocidad del tanque
     tank_speed = 1
@@ -564,8 +592,84 @@ def stfu ():
     mode_button_rect = pygame.Rect(10, 10, 80, 30)
     mode_button_color = RED
     mode_button_text = 'Mode'
+    # Definiciones de botones
+    boton_ayuda_rect = pygame.Rect(50, 200, 200, 50)
+    boton_fama_rect = pygame.Rect(50, 300, 200, 50)
+
+    # Colores
+    color_boton = (0, 128, 255)  # Azul
+    color_texto = (255, 255, 255)  # Blanco
+
+    def manejar_clic_en_boton(pos):
+        global menu_activo
+        if boton_ayuda_rect.collidepoint(pos):
+            thread_ayuda = threading.Thread(target=iniciar_ventana_ayuda)
+            thread_ayuda.start()
+    def iniciar_ventana_ayuda():
+        ventana_ayuda = tk.Tk()
+        ventana_ayuda.geometry("1800x1100")  # Ajusta el tamaño según tus necesidades
+        canva1 = Canvas(ventana_ayuda, width=1045, height=1015)
+        canva1.pack()
+        volverRank = PhotoImage(file="Imágenes/BotonSalirRank.png")
+        AgC = PhotoImage(file="Imágenes/Ag1-removebg-preview.png")
+        TaC = PhotoImage(file="Imágenes/ta1-removebg-preview.png")
+        Control = PhotoImage(file="Imágenes/Control (1).png")
+        FondoAyuda = PhotoImage(file="Imágenes/FondoHelp.png")
+        rosa = "#d84cff"
+        verde = "#32e800"
+        rojo = "#f90000"
+        negro = "#000000"
+        cian = "#429083"
+        blood = "#fa9905"
+
+        def exitt():
+            ventana_ayuda.destroy()
+
+        def back():  # comando para volver al submenu
+            canva1.delete("all")
+            stfu()
+        # Llama a la función de Tkinter para mostrar la ventana de ayuda
+
+            # Es importante crear una nueva instancia de Tk en el hilo
+
+            canva1.config(width=1800, height=1100)  # se configura el canvas
+            canva1.delete("all")
+
+            canva1.create_image(0, 0, anchor=tk.NW, image=FondoAyuda)
+
+            canva1.create_image(550, 20, anchor=tk.NW, image=Control)
+            canva1.create_image(10, 700, anchor=tk.NW, image=AgC)
+            canva1.create_image(1300, 700, anchor=tk.NW, image=TaC)
+
+            RankingVolver = Button(canva1, width=volverRank.width(), height=volverRank.height(), image=volverRank,
+                                   command=back, bg="black")
+            canva1.create_window(30, 40, window=RankingVolver)
+
+            canva1.create_text(880, 440, text="Botón rosa", font=("Helvetica", 35), fill=rosa)
+            canva1.create_text(880, 520, text="Botón verde", font=("Helvetica", 35), fill=verde)
+            canva1.create_text(880, 600, text="Botón rojo", font=("Helvetica", 35), fill=rojo)
+            canva1.create_text(880, 720, text="Botón negro", font=("Helvetica", 35), fill=negro)
+
+            canva1.create_text(200, 440, text="Colocar bloque de madera", font=("Helvetica", 25), fill=cian)
+            canva1.create_text(200, 520, text="Colocar bloque de concreto", font=("Helvetica", 25), fill=cian)
+            canva1.create_text(200, 600, text="Colocar bloque de acero", font=("Helvetica", 25), fill=cian)
+            canva1.create_text(200, 720, text="Seleccionar/Recoger bloque", font=("Helvetica", 25), fill=cian)
+
+            canva1.create_text(1600, 440, text="Disparar bola de agua", font=("Helvetica", 25), fill=blood)
+            canva1.create_text(1600, 520, text="Disparar bola de fuego", font=("Helvetica", 25), fill=blood)
+            canva1.create_text(1600, 600, text="Disparar bomba", font=("Helvetica", 25), fill=blood)
+            canva1.create_text(1590, 720, text="Seleccionar/Pausar la partida", font=("Helvetica", 25), fill=blood)
+
+            ventana_ayuda.mainloop()
 
     # Función para dibujar el botón de cambio de modo
+
+    def check_tank_collision(new_x, new_y, created_squares):
+        tank_rect = pygame.Rect(new_x, new_y, 70, 70)  # Ajusta el tamaño del rectángulo según sea necesario
+        for square_data in created_squares:
+            if tank_rect.colliderect(square_data['rect']):
+                return True
+        return False
     def draw_mode_button():
         pygame.draw.rect(window, mode_button_color, mode_button_rect)
         font = pygame.font.Font(None, 24)
@@ -619,6 +723,8 @@ def stfu ():
                 time_since_destruction = current_time - destroyed_square['time']
                 if time_since_destruction <= 500:  # La duración de la animación de explosión es de 500 ms
                     window.blit(explosion_image, destroyed_square['rect'].topleft)
+                    explosion_sound.play()
+                    explosion_sound.set_volume(0.5)
                 else:
                     destroyed_square['animate'] = False  # Termina la animación después de 500 ms
 
@@ -653,6 +759,7 @@ def stfu ():
             # Reproduce la canción
             pygame.mixer.music.load(os.path.join(carpeta, CancionDefensor))
             pygame.mixer.music.play()
+
 
     def check_collisions(created_squares, ball_x, ball_y, ball_radius, current_bullet, bombullet_collisions):
         global ball_direction
@@ -718,7 +825,6 @@ def stfu ():
         if not ball_collided:
             for square_data in created_squares:
                 square_data.pop('hit', None)
-
     def show_winner_window():
         # Crear la ventana principal de Tkinter
         win_root = tk.Tk()
@@ -741,6 +847,15 @@ def stfu ():
         # Ejecutar el bucle principal de Tkinter
         win_root.mainloop()
 
+    def mostrar_mensaje_victoria(mensaje):
+        rect = pygame.Rect(0, 0, 800, 600)  # Ajusta las dimensiones según sea necesario
+        pygame.draw.rect(window, (RED), rect)  # Dibuja un rectángulo negro
+        font = pygame.font.Font(None, 72)
+        texto = font.render(mensaje, True, (255, 255, 255))
+        window.blit(texto, (200, 250))  # Ajusta la posición del texto según sea necesario
+        pygame.display.update()
+        time.sleep(5)  # Muestra el mensaje durante 5 segundos
+
     carpeta = "Canciones"
     tiempo_inicial = time.time()
     running = True
@@ -750,7 +865,11 @@ def stfu ():
     punto_medio_cancion = duracion_cancion_atacante / 2
     beneficio_otorgado = False
     tiempo_inicio_mensaje = None
+    menu_activo = False
+    juego_finalizado = False
     while running:
+        if juego_finalizado:
+            continue
         window.blit(background_image, (0, 0))
         draw_bullet_counters()
         draw_block_counters()
@@ -770,8 +889,9 @@ def stfu ():
                     moving_left = True
                 elif event.key == pygame.K_d:
                     moving_right = True
-                elif event.key == pygame.K_e:
+                if event.key == pygame.K_e:
                     paused = not paused
+                    menu_activo = not menu_activo
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_w:
@@ -804,9 +924,19 @@ def stfu ():
                     if event.button == 1:
                         mouse_x, mouse_y = pygame.mouse.get_pos()
                         block_type = current_images[current_image_index]
-                        if created_block_counts[block_type] < 10:
+                        new_block_rect = pygame.Rect(mouse_x, mouse_y, square_size, square_size)
+
+                        # Actualizar la posición del tanque
+                        tank_rect = pygame.Rect(square_x, square_y, 70, 70)
+
+                        # Verificar que el nuevo bloque no se solape con bloques existentes o el tanque
+                        overlapping_blocks = any(
+                            existing_block['rect'].colliderect(new_block_rect) for existing_block in created_squares)
+                        overlapping_tank = tank_rect.colliderect(new_block_rect)
+
+                        if not (overlapping_blocks or overlapping_tank) and created_block_counts[block_type] < 10:
                             created_squares.append({
-                                'rect': pygame.Rect(mouse_x, mouse_y, square_size, square_size),
+                                'rect': new_block_rect,
                                 'lives': lives_for_blocks[current_image_index],
                                 'image': block_type
                             })
@@ -817,6 +947,9 @@ def stfu ():
                 elif event.key == pygame.K_p:
                     current_bullet = (current_bullet + 1) % len(bullet_types)
             current_time = pygame.time.get_ticks()
+
+            if event.type == pygame.MOUSEBUTTONDOWN and menu_activo:
+                manejar_clic_en_boton(event.pos)
 
             segundos_a_contar = obtener_duracion_mp3("Canciones/" + CancionDefensor)
             final = obtener_duracion_mp3("Canciones/" + CancionDefensor) + obtener_duracion_mp3(
@@ -840,6 +973,12 @@ def stfu ():
 
             if tiempo_transcurrido <= segundos_a_contar:
                 musica()
+        tiempo_transcurrido = time.time() - tiempo_inicial
+
+        if tiempo_transcurrido >= duracion_cancion_atacante:
+            mensaje_victoria = "¡DEFENDER WINS!"
+            mostrar_mensaje_victoria(mensaje_victoria)
+            juego_finalizado = True  # Indica que el juego ha finalizado
 
         current_time = pygame.time.get_ticks()
         if not paused:
@@ -853,13 +992,13 @@ def stfu ():
                     destroyed_squares.remove(destroyed_square)
 
             if not construction_mode:
-                if moving_up and square_y > 0:
+                if moving_up and square_y > 0 and not check_tank_collision(square_x, square_y - tank_speed,created_squares):
                     square_y -= tank_speed
-                if moving_down and square_y < height - square_size:
+                if moving_down and square_y < height - square_size and not check_tank_collision(square_x,square_y + tank_speed,created_squares):
                     square_y += tank_speed
-                if moving_left and square_x > 0:
+                if moving_left and square_x > 0 and not check_tank_collision(square_x - tank_speed, square_y,created_squares):
                     square_x -= tank_speed
-                if moving_right and square_x < width - square_size:
+                if moving_right and square_x < width - square_size and not check_tank_collision(square_x + tank_speed,square_y,created_squares):
                     square_x += tank_speed
 
             if ball_direction == "left":
@@ -884,21 +1023,34 @@ def stfu ():
 
             if ball_direction:
                 window.blit(bullet_types[current_bullet], (int(ball_x) - ball_radius, int(ball_y) - ball_radius))
+
                 if check_bullet_eagle_collision(ball_x, ball_y, eagle_image.get_rect(topleft=(eagle_x, eagle_y))):
-                    show_winner_window()
-                    pygame.quit()
-                    sys.exit()
+                    mostrar_mensaje_victoria("ATTACKER WINS")
+                    juego_finalizado = True  # Indica que el juego ha finalizado
 
             current_time = pygame.time.get_ticks()
-            if current_time - time_since_last_regeneration >= 30000:  # 30 segundos
+            if not paused and current_time - time_since_last_regeneration >= 30000:  # 30 segundos
                 available_bullets = [5, 5, 5]
                 time_since_last_regeneration = current_time
 
         else:
-            font = pygame.font.Font(None, 74)
-            text = font.render('PAUSA', True, RED)
-            text_rect = text.get_rect(center=(width // 2, height // 2))
-            window.blit(text, text_rect)
+            if menu_activo:
+                # Dibujar el fondo del menú
+                pygame.draw.rect(window, (0, 0, 0), (0, 150, 300, 300))  # Un rectángulo negro como fondo
+
+                # Dibujar botones
+                pygame.draw.rect(window, color_boton, boton_ayuda_rect)  # Botón de Ayuda
+                pygame.draw.rect(window, color_boton, boton_fama_rect)  # Botón de Salón de la Fama
+
+                # Dibujar texto en los botones
+                font = pygame.font.Font(None, 36)
+                texto = font.render('PAUSA', True, color_texto)
+                window.blit(texto, (100, 160))
+                texto_ayuda = font.render('Ayuda', True, color_texto)
+                window.blit(texto_ayuda, boton_ayuda_rect.topleft)
+                texto_fama = font.render('Ranking', True, color_texto)
+                window.blit(texto_fama, boton_fama_rect.topleft)
+
 
         for shot in shot_animations[:]:
             if current_time - shot['start_time'] > 200:  # La duración de la animación de disparo
@@ -933,11 +1085,23 @@ def stfu ():
                     beneficio_otorgado = True
 
             # Mostrar el mensaje del beneficio
-            if tiempo_inicio_mensaje and pygame.time.get_ticks() - tiempo_inicio_mensaje < 10000:  # 10 segundos
+            if tiempo_inicio_mensaje and pygame.time.get_ticks() - tiempo_inicio_mensaje < 3000:  # 10 segundos
                 mensaje = f"BENEFICIO FORANEO: {beneficio_foraneo} BOMBAS DE AGUA"
                 mensaje_texto = font.render(mensaje, True, (255, 255, 255))
-                window.blit(mensaje_texto, (width / 2 , 10))
+                window.blit(mensaje_texto, (width / 2 , 200))
+
+            # En el bucle principal del juego
+            font = pygame.font.Font(None, 30)  # Ajusta el tamaño de la fuente según sea necesario
+            user1_text = font.render("Jugador 1: " + user1, True, (RED))
+            user2_text = font.render("Jugador 2: " + user2, True, (BLUE))
+
+            # Ajusta las coordenadas según donde quieras mostrar los nombres
+            window.blit(user1_text, (550, 10))
+            window.blit(user2_text, (550, 50))
+
         pygame.display.update()
 
     pygame.quit()
     sys.exit()
+
+
